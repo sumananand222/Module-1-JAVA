@@ -1,0 +1,252 @@
+Select * from tab; //list of tables
+-------------------------------------------------------------------------------------------------
+DML: insert, update, delete
+DDL: create, alter, drop
+TCL: commit, rollback, savepoint
+-------------------------------------------------------------------------------------------------
+clear scr; // screen clear command
+-------------------------------------------------------------------------------------------------
+
+select * from departments;
+select department_id, department_name from departments;
+
+desc empolyees; // gives table structure
+
+
+create table account(
+aid number(8) primary key,
+mobileno number(10) unique not null,
+accountholder varchar2(30) not null,
+balance number(8,2) check(balance>=0.00));
+
+insert into account values(100, 9999999999, 'King', 24000.00);
+
+Savepoint B;
+
+update account set balance=30000.00, accountholder='King Khan' where aid=100;
+
+delete from account; // deletes all rows
+
+rollback to B; // rollback to savepoint B
+
+commit; // Ctrl+S
+
+# DDL commands perform automatic commit.
+-------------------------------------------------------------------------------------------------
+set linesize 500 //to present 500 characters in a row
+-------------------------------------------------------------------------------------------------
+select * from employees where department_id = 50 and job_id='ST_MAN';
+
+select * from employees where department_id = 50 or job_id='ST_MAN';
+
+select * from employees where department_id = 50 or job_id like '%MAN';
+
+select * from employees where job_id in ('ST_MAN', 'SA_MAN', 'MK_MAN');
+
+select * from employees where job_id NOT in ('ST_MAN', 'SA_MAN', 'MK_MAN');
+
+select * from employees where salary between 10000 and 20000;
+
+select * from employees where salary NOT between 10000 and 20000;
+
+select * from employees where salary between 10000 and 20000 order by job_id, salary;
+-------------------------------------------------------------------------------------------------
+RR format: 95-> 1995, 15->2015
+YY format: 95-> 2095, 15->2015
+-------------------------------------------------------------------------------------------------
+BETWEEN operator works on Numbers, Dates
+
+select * from employees where HIRE_DATE between '01-JAN-05' and '31-DEC-08';
+-------------------------------------------------------------------------------------------------
+select last_name, upper(last_name), lower(last_name) from employees;
+
+Select sum(salary) from employees; // group function
+
+
+SQL> select sum(Salary) totalsalary, max(Salary) maxSalary, min(Salary) "Minimum Salary", Count(Salary) "Total Count", Avg(Salary) AvgSalary from employees;
+
+TOTALSALARY  MAXSALARY Minimum Salary Total Count  AVGSALARY
+----------- ---------- -------------- ----------- ----------
+     691416      24000           2100         107 6461.83178
+
+Single quotations -: for column values
+
+null -> empty (Neither 0 nor space)
+double quotations -: Select statement uses it for aliasing
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+All group functions ignores NULL values.
+
+For calculation of every row, use NVL, it replaces NULL by 0.
+select avg(nvl(commission_pct,0))as totalcount, count(nvl(commission_pct,0)) from employees;
+
+TOTALCOUNT COUNT(NVL(COMMISSION_PCT,0))
+---------- ----------------------------
+.072897196                          107
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+SQL> select sum(Salary) totalsalary, count(salary) from employees group by department_id;
+
+TOTALSALARY COUNT(SALARY)
+----------- -------------
+      51608             6
+      24900             6
+       7000             1
+      58000             3
+      19000             2
+      10000             1
+      20308             2
+     156400            45
+     304500            34
+       6500             1
+      28800             5
+
+TOTALSALARY COUNT(SALARY)
+----------- -------------
+       4400             1
+
+12 rows selected.
+
+# it shows 12 rows selected.
+# Group by clause doesnot ignore NULL.
+
+SQL> select department_id, sum(Salary) totalsal
+
+DEPARTMENT_ID TOTALSALARY COUNT(SALARY)
+------------- ----------- -------------
+          100       51608             6
+           30       24900             6
+                     7000             1
+           90       58000             3
+           20       19000             2
+           70       10000             1
+          110       20308             2
+           50      156400            45
+           80      304500            34
+           40        6500             1
+           60       28800             5
+
+DEPARTMENT_ID TOTALSALARY COUNT(SALARY)
+------------- ----------- -------------
+           10        4400             1
+
+12 rows selected.
+-------------------------------------------------------------------------------------------------
+
+SQL> select department_id, sum(Salary) totalsalary, count(salary) from employees where sum(salary)>=50000 group by department_id;
+select department_id, sum(Salary) totalsalary, count(salary) from employees where sum(salary)>=50000 group by department_id
+                                                                                  *
+ERROR at line 1:
+ORA-00934: group function is not allowed here
+
+where clause is not used with Group by function
+instead of where clause, HAVING clause can be used with Group by.
+
+SQL> select department_id, sum(Salary) totalsalary, count(salary) from employees having sum(salary)>=50000 group by department_id;
+
+DEPARTMENT_ID TOTALSALARY COUNT(SALARY)
+------------- ----------- -------------
+          100       51608             6
+           90       58000             3
+           50      156400            45
+           80      304500            34
+----------------------------------------------------------------------------------------------------------------------------------
+SQL> select count(department_id) from employees;
+
+COUNT(DEPARTMENT_ID)
+--------------------
+                 106
+
+SQL> select count(distinct(department_id)) from employees;
+
+COUNT(DISTINCT(DEPARTMENT_ID))
+------------------------------
+                            11
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Select employees.last_name,employees.department_id,departments.department_id,departments.department_name from employees, departments;
+
+Select employees.last_name,employees.department_id,departments.department_id,departments.department_name from employees cross join departments;
+
+#cartesian product and cross join give same results.
+
+Select employees.last_name,employees.department_id,departments.department_id,departments.department_name from employees join departments; // inner join
+
+Select employees.last_name,employees.department_id,departments.department_id,departments.department_name from employees, departments where employees.department_id=departments.department_id;
+
+Select * from employees left outer join departments where employees.department_id=departments.department_id;
+
+Select * from employees right outer join departments where employees.department_id=departments.department_id;
+
+#left outer join, right outer join, full outer join
+# they have to be performd with equi join condition (where emp.deptid=dept.deptid)
+#oracle does not support full outer join but it is a standard join.
+
+#equi join => natural join
+performs join on common columns between tables
+-> common in -> same column name, same data type, same size
+-> common columns are displayed only once.
+#standard -> inner join=> matched records
+
+Select * from employees natural join departments;
+
+Select * from employees join departments using(department_id);
+
+Select e.last_name,e.department_id,d.department_id,d.department_name from employees e join departments d where e.department_id=d.department_id;
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
